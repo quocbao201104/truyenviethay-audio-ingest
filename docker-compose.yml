@@ -1,0 +1,30 @@
+services:
+  crawler:
+    build: .
+    container_name: crawl-audio-crawler
+    command: npm run crawl:once
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - crawler_tmp:/app/tmp
+      - crawler_node_modules:/app/node_modules
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  worker:
+    build: .
+    container_name: crawl-audio-worker
+    command: npm run worker
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - crawler_tmp:/app/tmp
+      - crawler_node_modules:/app/node_modules
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  crawler_tmp:
+  crawler_node_modules:

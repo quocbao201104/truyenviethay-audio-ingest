@@ -1,0 +1,19 @@
+[Unit]
+Description=Audio Worker Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=audioingest
+Group=audioingest
+WorkingDirectory=/opt/crawl-audio-youtube
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/npm run worker
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/crawl-audio-youtube/worker.log
+StandardError=append:/var/log/crawl-audio-youtube/worker.log
+
+[Install]
+WantedBy=multi-user.target

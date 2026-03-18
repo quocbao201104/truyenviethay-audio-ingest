@@ -1,0 +1,19 @@
+[Unit]
+Description=Audio Crawler Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=audioingest
+Group=audioingest
+WorkingDirectory=/opt/crawl-audio-youtube
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/npm run crawl:once
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/crawl-audio-youtube/crawler.log
+StandardError=append:/var/log/crawl-audio-youtube/crawler.log
+
+[Install]
+WantedBy=multi-user.target

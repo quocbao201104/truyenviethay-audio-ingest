@@ -1,0 +1,34 @@
+{
+  "name": "crawl-audio-youtube",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Crawler and worker for ingesting partner audio from YouTube into R2 and truyenviethay_new",
+  "main": "src/crawler.js",
+  "scripts": {
+    "crawl:once": "node src/crawler.js",
+    "worker": "node src/worker.js",
+    "migrate:audio": "node src/scripts/runSqlMigration.js",
+    "fix:local-definers": "node src/scripts/fixLocalDefiners.js",
+    "inspect:definers": "node src/scripts/inspectDbDefiners.js",
+    "db:check": "node src/scripts/dbCheck.js",
+    "queue:stats": "node src/scripts/queueStats.js",
+    "queue:recover": "node src/scripts/recoverQueue.js",
+    "cleanup:tmp": "node src/scripts/cleanupTmp.js",
+    "dev:crawl": "nodemon src/crawler.js",
+    "dev:worker": "nodemon src/worker.js"
+  },
+  "engines": {
+    "node": "20.x"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1008.0",
+    "dotenv": "^16.5.0",
+    "ioredis": "^5.10.0",
+    "mysql2": "^3.14.0",
+    "p-limit": "^3.1.0",
+    "slugify": "^1.6.6"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
