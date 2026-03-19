@@ -27,6 +27,7 @@ const env = {
   dbName: process.env.DB_NAME || "",
   redisUrl: process.env.REDIS_URL || "",
   redisPrefix: process.env.REDIS_PREFIX || "audio",
+  redisCommandTimeoutMs: parseNumber(process.env.REDIS_COMMAND_TIMEOUT_MS, 0),
   r2Endpoint: process.env.R2_ENDPOINT || "",
   r2Region: process.env.R2_REGION || "auto",
   r2Bucket: process.env.R2_BUCKET || "",

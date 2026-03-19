@@ -52,7 +52,7 @@ const main = async () => {
   }
 
   logger.info(
-    `Worker config: concurrency=${env.workerConcurrency}, segmentSeconds=${env.segmentSeconds}, jobLimit=${env.jobLimit}, downloadDelayMs=${env.downloadDelayMs}, recoverProcessingOnStart=${env.recoverProcessingOnStart}, ytDlpJsRuntimes=${env.ytDlpJsRuntimes || "none"}, ytDlpCookiesFile=${env.ytDlpCookiesFile || "none"}`
+    `Worker config: concurrency=${env.workerConcurrency}, segmentSeconds=${env.segmentSeconds}, jobLimit=${env.jobLimit}, downloadDelayMs=${env.downloadDelayMs}, recoverProcessingOnStart=${env.recoverProcessingOnStart}, redisCommandTimeoutMs=${env.redisCommandTimeoutMs || 0}, ytDlpJsRuntimes=${env.ytDlpJsRuntimes || "none"}, ytDlpCookiesFile=${env.ytDlpCookiesFile || "none"}`
   );
 
   if (env.recoverProcessingOnStart) {

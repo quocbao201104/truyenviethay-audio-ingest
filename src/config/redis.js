@@ -22,7 +22,7 @@ const parseRedisUrl = (connectionString) => {
 
 const redis = new Redis(parseRedisUrl(env.redisUrl), {
   maxRetriesPerRequest: 1,
-  commandTimeout: 10000,
+  ...(env.redisCommandTimeoutMs > 0 ? { commandTimeout: env.redisCommandTimeoutMs } : {}),
   enableOfflineQueue: true,
   retryStrategy: (times) => Math.min(times * 50, 2000),
 });

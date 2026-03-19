@@ -131,6 +131,7 @@ DB_NAME=truyenviethay_prod
 
 REDIS_URL=redis://YOUR_DO_REDIS_HOST:6379/0
 REDIS_PREFIX=audio:prod
+REDIS_COMMAND_TIMEOUT_MS=0
 
 R2_ENDPOINT=https://YOUR_ACCOUNT_ID.r2.cloudflarestorage.com
 R2_REGION=auto
