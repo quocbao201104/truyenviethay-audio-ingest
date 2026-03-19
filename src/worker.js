@@ -17,15 +17,19 @@ const workerLoop = async (workerId, state) => {
 
     const reserved = await processQueue.reserve(env.workerPollSeconds);
     if (!reserved) {
+      logger.debug(`Worker ${workerId} found no job, polling again`);
       continue;
     }
 
     try {
       await processVideoJob(reserved.payload);
+      logger.info(`Worker ${workerId} acknowledging ${reserved.payload.youtubeVideoId}`);
       await processQueue.ack(reserved.rawJob);
+      logger.info(`Worker ${workerId} acknowledged ${reserved.payload.youtubeVideoId}`);
       state.processedCount += 1;
       logger.info(`Worker ${workerId} finished ${reserved.payload.youtubeVideoId}`);
     } catch (error) {
+      logger.warn(`Worker ${workerId} marking ${reserved.payload.youtubeVideoId} as failed`);
       const result = await processQueue.fail(reserved.rawJob, reserved.payload, error);
       state.processedCount += 1;
       logger.error(
