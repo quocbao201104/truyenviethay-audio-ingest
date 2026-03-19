@@ -158,4 +158,5 @@ const runDiscoveryOnce = async () => {
 
 module.exports = {
   runDiscoveryOnce,
+  closeDiscoveryQueue: () => processQueue.close(),
 };

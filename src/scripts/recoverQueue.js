@@ -8,14 +8,18 @@ const main = async () => {
   }
 
   const queue = new RedisQueue("process");
-  const before = await queue.getStats();
-  const recovered = await queue.recoverProcessingJobs();
-  const after = await queue.getStats();
+  try {
+    const before = await queue.getStats();
+    const recovered = await queue.recoverProcessingJobs();
+    const after = await queue.getStats();
 
-  logger.info(`Recovered ${recovered} job(s) from processing back to queue`, {
-    before,
-    after,
-  });
+    logger.info(`Recovered ${recovered} job(s) from processing back to queue`, {
+      before,
+      after,
+    });
+  } finally {
+    await queue.close();
+  }
 };
 
 main().catch((error) => {

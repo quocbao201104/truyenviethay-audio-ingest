@@ -1,6 +1,6 @@
 const logger = require("./config/logger");
 const { env } = require("./config/env");
-const { runDiscoveryOnce } = require("./services/discoveryService");
+const { runDiscoveryOnce, closeDiscoveryQueue } = require("./services/discoveryService");
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -31,8 +31,12 @@ const main = async () => {
   }
 
   if (!env.crawlerLoopEnabled) {
-    await runCycle();
-    return;
+    try {
+      await runCycle();
+      return;
+    } finally {
+      await closeDiscoveryQueue();
+    }
   }
 
   while (true) {

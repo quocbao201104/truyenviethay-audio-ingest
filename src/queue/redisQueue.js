@@ -1,4 +1,4 @@
-const redis = require("../config/redis");
+const { createRedisClient } = require("../config/redis");
 const { env } = require("../config/env");
 
 class RedisQueue {
@@ -6,14 +6,16 @@ class RedisQueue {
     this.queueKey = `${env.redisPrefix}:queue:${queueName}`;
     this.processingKey = `${env.redisPrefix}:processing:${queueName}`;
     this.deadKey = `${env.redisPrefix}:dead:${queueName}`;
+    this.commandRedis = createRedisClient();
+    this.blockingRedis = createRedisClient({ blocking: true });
   }
 
   async enqueue(payload) {
-    await redis.lpush(this.queueKey, JSON.stringify(payload));
+    await this.commandRedis.lpush(this.queueKey, JSON.stringify(payload));
   }
 
   async getStats() {
-    const results = await redis
+    const results = await this.commandRedis
       .multi()
       .llen(this.queueKey)
       .llen(this.processingKey)
@@ -34,7 +36,7 @@ class RedisQueue {
     const recoveredJobs = [];
 
     while (true) {
-      const rawJob = await redis.rpoplpush(this.processingKey, this.queueKey);
+      const rawJob = await this.commandRedis.rpoplpush(this.processingKey, this.queueKey);
       if (!rawJob) {
         break;
       }
@@ -46,7 +48,7 @@ class RedisQueue {
   }
 
   async reserve(timeoutSeconds = env.workerPollSeconds) {
-    const rawJob = await redis.brpoplpush(this.queueKey, this.processingKey, timeoutSeconds);
+    const rawJob = await this.blockingRedis.brpoplpush(this.queueKey, this.processingKey, timeoutSeconds);
     if (!rawJob) {
       return null;
     }
@@ -58,7 +60,7 @@ class RedisQueue {
   }
 
   async ack(rawJob) {
-    await redis.lrem(this.processingKey, 1, rawJob);
+    await this.commandRedis.lrem(this.processingKey, 1, rawJob);
   }
 
   async fail(rawJob, payload, error) {
@@ -71,15 +73,19 @@ class RedisQueue {
       failedAt: new Date().toISOString(),
     };
 
-    await redis.lrem(this.processingKey, 1, rawJob);
+    await this.commandRedis.lrem(this.processingKey, 1, rawJob);
 
     if (retryable && attempts < env.workerMaxRetries) {
-      await redis.lpush(this.queueKey, JSON.stringify(nextPayload));
+      await this.commandRedis.lpush(this.queueKey, JSON.stringify(nextPayload));
       return { requeued: true, attempts };
     }
 
-    await redis.lpush(this.deadKey, JSON.stringify(nextPayload));
+    await this.commandRedis.lpush(this.deadKey, JSON.stringify(nextPayload));
     return { requeued: false, attempts };
+  }
+
+  async close() {
+    await Promise.allSettled([this.commandRedis.quit(), this.blockingRedis.quit()]);
   }
 }
 

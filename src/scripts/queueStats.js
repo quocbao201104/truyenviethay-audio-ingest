@@ -7,8 +7,12 @@ const main = async () => {
   }
 
   const queue = new RedisQueue("process");
-  const stats = await queue.getStats();
-  console.log(JSON.stringify(stats, null, 2));
+  try {
+    const stats = await queue.getStats();
+    console.log(JSON.stringify(stats, null, 2));
+  } finally {
+    await queue.close();
+  }
 };
 
 main().catch((error) => {

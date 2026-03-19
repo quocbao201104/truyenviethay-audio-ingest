@@ -20,11 +20,18 @@ const parseRedisUrl = (connectionString) => {
   };
 };
 
-const redis = new Redis(parseRedisUrl(env.redisUrl), {
-  maxRetriesPerRequest: 1,
-  ...(env.redisCommandTimeoutMs > 0 ? { commandTimeout: env.redisCommandTimeoutMs } : {}),
-  enableOfflineQueue: true,
-  retryStrategy: (times) => Math.min(times * 50, 2000),
-});
+const createRedisClient = ({ blocking = false } = {}) =>
+  new Redis(parseRedisUrl(env.redisUrl), {
+    maxRetriesPerRequest: 1,
+    ...(blocking || env.redisCommandTimeoutMs <= 0
+      ? {}
+      : { commandTimeout: env.redisCommandTimeoutMs }),
+    enableOfflineQueue: true,
+    lazyConnect: false,
+    keepAlive: 30000,
+    retryStrategy: (times) => Math.min(times * 50, 2000),
+  });
 
-module.exports = redis;
+module.exports = {
+  createRedisClient,
+};
