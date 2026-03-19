@@ -44,6 +44,8 @@ const env = {
   systemUserId: parseNumber(process.env.SYSTEM_USER_ID, 13),
   enableStoryCreate: parseBoolean(process.env.ENABLE_STORY_CREATE, false),
   ytDlpBin: process.env.YTDLP_BIN || "yt-dlp",
+  ytDlpJsRuntimes: process.env.YTDLP_JS_RUNTIMES || "node",
+  ytDlpCookiesFile: process.env.YTDLP_COOKIES_FILE || "",
   ffmpegBin: process.env.FFMPEG_BIN || "ffmpeg",
   ffprobeBin: process.env.FFPROBE_BIN || "ffprobe",
   audioTmpDir: process.env.AUDIO_TMP_DIR || path.join(process.cwd(), "tmp"),

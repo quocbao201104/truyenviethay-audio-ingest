@@ -152,6 +152,8 @@ CRAWLER_INTERVAL_SECONDS=900
 CRAWLER_STARTUP_DELAY_SECONDS=5
 
 YTDLP_BIN=/usr/local/bin/yt-dlp
+YTDLP_JS_RUNTIMES=node
+YTDLP_COOKIES_FILE=/opt/crawl-audio-youtube/secrets/youtube-cookies.txt
 FFMPEG_BIN=/usr/bin/ffmpeg
 FFPROBE_BIN=/usr/bin/ffprobe
 
@@ -166,6 +168,32 @@ R2_UPLOAD_CONCURRENCY=4
 TMP_CLEANUP_MAX_AGE_HOURS=24
 RECOVER_PROCESSING_ON_START=1
 ```
+
+### Thu muc secrets cho cookie YouTube
+
+```bash
+sudo mkdir -p /opt/crawl-audio-youtube/secrets
+sudo chown -R audioingest:audioingest /opt/crawl-audio-youtube/secrets
+sudo chmod 700 /opt/crawl-audio-youtube/secrets
+```
+
+Dat file cookie tai:
+
+```text
+/opt/crawl-audio-youtube/secrets/youtube-cookies.txt
+```
+
+Ghi chu:
+
+- worker hien tai can cookie YouTube de tranh loi `Sign in to confirm you're not a bot`
+- file cookie can o dinh dang Netscape cookies.txt
+- sau khi dat file cookie, dung:
+
+```bash
+sudo -u audioingest ls -l /opt/crawl-audio-youtube/secrets/youtube-cookies.txt
+```
+
+de dam bao user `audioingest` doc duoc
 
 ## 7. Migration DB
 

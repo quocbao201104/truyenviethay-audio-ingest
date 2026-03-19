@@ -12,8 +12,22 @@ const parseJsonOutput = (stdout) => {
   return JSON.parse(trimmed);
 };
 
+const buildYtDlpArgs = (args = []) => {
+  const prefixArgs = [];
+
+  if (env.ytDlpJsRuntimes) {
+    prefixArgs.push("--js-runtimes", env.ytDlpJsRuntimes);
+  }
+
+  if (env.ytDlpCookiesFile) {
+    prefixArgs.push("--cookies", env.ytDlpCookiesFile);
+  }
+
+  return [...prefixArgs, ...args];
+};
+
 const runYtDlpJson = async (args, options = {}) => {
-  const { stdout } = await runCommand(env.ytDlpBin, args, options);
+  const { stdout } = await runCommand(env.ytDlpBin, buildYtDlpArgs(args), options);
   return parseJsonOutput(stdout);
 };
 
@@ -44,13 +58,10 @@ const downloadAudio = async ({ videoUrl, videoId, outputDir }) => {
   await ensureDir(outputDir);
 
   const outputTemplate = path.join(outputDir, "%(id)s.%(ext)s");
-  await runCommand(env.ytDlpBin, [
-    "-f",
-    "ba",
-    "-o",
-    outputTemplate,
-    videoUrl,
-  ]);
+  await runCommand(
+    env.ytDlpBin,
+    buildYtDlpArgs(["-f", "ba", "-o", outputTemplate, videoUrl])
+  );
 
   const files = await listFiles(outputDir);
   const audioFile = files.find((file) => path.basename(file).startsWith(`${videoId}.`));
