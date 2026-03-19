@@ -92,7 +92,19 @@ const processVideoJob = async (job) => {
       })
     );
 
-    const uploadedParts = await Promise.all(uploadTasks);
+    const uploadResults = await Promise.allSettled(uploadTasks);
+    const uploadFailures = uploadResults.filter((result) => result.status === "rejected");
+
+    if (uploadFailures.length > 0) {
+      const firstError = uploadFailures[0].reason;
+      logger.error(
+        `Video ${job.youtubeVideoId}: upload phase failed with ${uploadFailures.length} error(s)`,
+        firstError
+      );
+      throw firstError;
+    }
+
+    const uploadedParts = uploadResults.map((result) => result.value);
     logger.info(
       `Video ${job.youtubeVideoId}: upload phase completed -> uploadedParts=${uploadedParts.length}, concurrency=${env.r2UploadConcurrency}`
     );
