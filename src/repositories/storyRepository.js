@@ -5,7 +5,7 @@ const ACTIVE_STORY_CLAUSE = "(is_deleted = 0 OR is_deleted IS NULL)";
 
 const findStoryBySlug = async (slug) => {
   const [rows] = await db.query(
-    `SELECT id, ten_truyen, slug, tac_gia
+    `SELECT id, ten_truyen, slug, tac_gia, mo_ta
      FROM truyen_new
      WHERE slug = ?
        AND ${ACTIVE_STORY_CLAUSE}
@@ -18,7 +18,7 @@ const findStoryBySlug = async (slug) => {
 
 const findStoryByTitle = async (title) => {
   const [rows] = await db.query(
-    `SELECT id, ten_truyen, slug, tac_gia
+    `SELECT id, ten_truyen, slug, tac_gia, mo_ta
      FROM truyen_new
      WHERE ten_truyen = ?
        AND ${ACTIVE_STORY_CLAUSE}
@@ -29,13 +29,14 @@ const findStoryByTitle = async (title) => {
   return rows[0] || null;
 };
 
-const createPartnerStory = async ({ title, slug, author, sourceUrl, coverUrl }) => {
+const createPartnerStory = async ({ title, slug, author, sourceUrl, coverUrl, description }) => {
   if (env.dryRun) {
     return {
       id: 0,
       ten_truyen: title,
       slug,
       tac_gia: author,
+      mo_ta: description || null,
       _previewOnly: true,
       _sourceUrl: sourceUrl || null,
       _coverUrl: coverUrl || null,
@@ -59,7 +60,7 @@ const createPartnerStory = async ({ title, slug, author, sourceUrl, coverUrl }) 
       title,
       slug,
       author || "Unknown",
-      `Auto-created from partner audio ingest (${env.partnerName})`,
+      description || `Auto-created from partner audio ingest (${env.partnerName})`,
       "dang_ra",
       sourceUrl || null,
       1,
@@ -81,7 +82,27 @@ const createPartnerStory = async ({ title, slug, author, sourceUrl, coverUrl }) 
     ten_truyen: title,
     slug,
     tac_gia: author,
+    mo_ta: description || null,
   };
+};
+
+const fillStoryDescriptionIfMissing = async (storyId, description) => {
+  const trimmedDescription = typeof description === "string" ? description.trim() : "";
+
+  if (env.dryRun || !storyId || !trimmedDescription) {
+    return false;
+  }
+
+  const [result] = await db.query(
+    `UPDATE truyen_new
+     SET mo_ta = ?,
+         thoi_gian_cap_nhat = NOW()
+     WHERE id = ?
+       AND (mo_ta IS NULL OR TRIM(mo_ta) = '')`,
+    [trimmedDescription, storyId]
+  );
+
+  return result.affectedRows > 0;
 };
 
 const markStoryAudioReady = async (truyenId) => {
@@ -105,5 +126,6 @@ module.exports = {
   findStoryBySlug,
   findStoryByTitle,
   createPartnerStory,
+  fillStoryDescriptionIfMissing,
   markStoryAudioReady,
 };

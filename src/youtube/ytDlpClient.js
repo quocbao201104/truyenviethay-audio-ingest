@@ -31,13 +31,37 @@ const runYtDlpJson = async (args, options = {}) => {
   return parseJsonOutput(stdout);
 };
 
+const normalizeDescription = (value) => {
+  if (!value || typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value
+    .replace(/\r\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+  return normalized || null;
+};
+
 const listChannelPlaylists = async (sourceUrl) => {
   const result = await runYtDlpJson(["--flat-playlist", "--dump-single-json", sourceUrl]);
   return (result.entries || []).map((entry) => ({
     id: entry.id,
     title: entry.title,
     url: entry.url || `https://www.youtube.com/playlist?list=${entry.id}`,
+    description: normalizeDescription(entry.description || entry.playlist_description || null),
   }));
+};
+
+const getPlaylistMetadata = async (playlistUrl) => {
+  const result = await runYtDlpJson(["--flat-playlist", "--playlist-items", "1", "--dump-single-json", playlistUrl]);
+
+  return {
+    id: result.id || null,
+    title: result.title || null,
+    description: normalizeDescription(result.description || null),
+  };
 };
 
 const listPlaylistVideos = async (playlistUrl) => {
@@ -120,6 +144,7 @@ const probeDuration = async (filePath) => {
 
 module.exports = {
   listChannelPlaylists,
+  getPlaylistMetadata,
   listPlaylistVideos,
   downloadAudio,
   segmentAudio,

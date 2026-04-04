@@ -6,19 +6,34 @@ const {
   findStoryBySlug,
   findStoryByTitle,
   createPartnerStory,
+  fillStoryDescriptionIfMissing,
 } = require("../repositories/storyRepository");
 const {
   findVideoByYoutubeId,
   upsertVideo,
   enqueueReviewItem,
 } = require("../repositories/audioRepository");
-const { listChannelPlaylists, listPlaylistVideos } = require("../youtube/ytDlpClient");
+const { listChannelPlaylists, getPlaylistMetadata, listPlaylistVideos } = require("../youtube/ytDlpClient");
 
 const processQueue = new RedisQueue("process");
 
 const isAlreadyManaged = (video) =>
   !!video &&
   ["queued", "downloading", "processing", "uploaded", "done"].includes(video.process_status);
+
+const resolvePlaylistDescription = async (playlist) => {
+  if (playlist.description) {
+    return playlist.description;
+  }
+
+  try {
+    const metadata = await getPlaylistMetadata(playlist.url);
+    return metadata.description || null;
+  } catch (error) {
+    logger.warn(`Could not fetch description for playlist "${playlist.title}"`, error.message);
+    return null;
+  }
+};
 
 const resolveStory = async (playlist) => {
   const parsed = parseStoryTitle(playlist.title);
@@ -43,6 +58,8 @@ const resolveStory = async (playlist) => {
     story = await findStoryByTitle(parsed.storyTitle);
   }
 
+  const playlistDescription = await resolvePlaylistDescription(playlist);
+
   if (!story) {
     logger.info(`Story not found for playlist "${playlist.title}", creating a new partner story`);
     story = await createPartnerStory({
@@ -51,12 +68,19 @@ const resolveStory = async (playlist) => {
       author: parsed.author,
       sourceUrl: playlist.url,
       coverUrl: null,
+      description: playlistDescription,
     });
 
     if (story._previewOnly) {
       logger.info(
         `Dry-run preview: using temporary story "${story.ten_truyen}" with slug "${story.slug}" without writing to DB`
       );
+    }
+  } else if (!story.mo_ta && playlistDescription) {
+    const updated = await fillStoryDescriptionIfMissing(story.id, playlistDescription);
+    if (updated) {
+      logger.info(`Filled missing description for story ${story.id} from playlist "${playlist.title}"`);
+      story.mo_ta = playlistDescription;
     }
   }
 

@@ -40,6 +40,7 @@ const parseStoryTitle = (rawTitle) => {
   const storyTitle = cleanupPart(firstPart.replace(/^\d+\s*$/, "").trim());
   const author = pickAuthor(splitParts.slice(1));
   const slug = toSlug(storyTitle);
+  const hasPipe = raw.includes("|");
 
   let confidence = 0.2;
   if (storyTitle) {
@@ -58,6 +59,10 @@ const parseStoryTitle = (rawTitle) => {
     confidence += 0.1;
   }
 
+  if (storyTitle && !hasPipe) {
+    confidence = Math.max(confidence, 0.8);
+  }
+
   return {
     rawTitle: raw,
     cleanedTitle: splitParts.join(" | "),
@@ -65,7 +70,7 @@ const parseStoryTitle = (rawTitle) => {
     author,
     slug,
     confidence: Math.min(confidence, 1),
-    needsManualReview: !storyTitle || confidence < 0.75,
+    needsManualReview: !storyTitle || (confidence < 0.75 && hasPipe),
     normalizedStoryTitle: normalizeText(storyTitle),
   };
 };
